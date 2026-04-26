@@ -1,0 +1,62 @@
+import { useState, useCallback, useMemo } from 'react';
+import { createAiDriver } from '../ai/registry';
+import type { AiProvider, ProviderSettings, GenerationOptions } from '../ai/types';
+
+export interface UseAiOptions {
+    provider: AiProvider;
+    settings: ProviderSettings;
+}
+
+export function useAi({ provider, settings }: UseAiOptions) {
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const driver = useMemo(() => createAiDriver(provider, settings), [provider, settings]);
+
+    const generate = useCallback(async (options: GenerationOptions) => {
+        setIsGenerating(true);
+        setError(null);
+        try {
+            const result = await driver.generateText(options);
+            return result;
+        } catch (err: any) {
+            const msg = err.message || String(err);
+            setError(msg);
+            throw err;
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [driver]);
+
+    const stream = useCallback(async (options: GenerationOptions, onChunk: (chunk: string) => void) => {
+        setIsGenerating(true);
+        setError(null);
+        try {
+            const textStream = await driver.streamText(options);
+            const reader = textStream.getReader();
+            let fullText = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                fullText += value;
+                onChunk(value);
+            }
+            return fullText;
+        } catch (err: any) {
+            const msg = err.message || String(err);
+            setError(msg);
+            throw err;
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [driver]);
+
+    return {
+        generate,
+        stream,
+        isGenerating,
+        error,
+        driver // Expose driver for other methods like fetchModels
+    };
+}

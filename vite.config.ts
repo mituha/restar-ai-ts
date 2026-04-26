@@ -5,7 +5,11 @@ import dts from 'vite-plugin-dts'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), dts()],
+  plugins: [react(), dts({ 
+    tsconfigPath: './tsconfig.app.json',
+    include: ['src', 'lib'],
+    insertTypesEntry: true
+  })],
   build: {
     lib: {
       // エントリーポイント（index.ts）を指定
@@ -16,14 +20,43 @@ export default defineConfig({
       // formats: ['es', 'umd'] // モダンなESMと、汎用的なUMD両方出すわん デフォルトで両方出す模様
     },
     rollupOptions: {
-      // react と react-dom はライブラリに含めず、使う側に持ってもらうわん
-      external: ['react', 'react-dom'],
-      output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM'
+      external: [
+        'react', 
+        'react-dom', 
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'lucide-react',
+        /^ai(\/.*)?$/,
+        /^@ai-sdk(\/.*)?$/
+      ],
+      output: [
+        {
+          format: 'es',
+          entryFileNames: 'index.js',
+          preserveModules: false,
+          globals: {
+            react: 'React',
+            'react-dom': 'ReactDOM',
+            'lucide-react': 'Lucide'
+          }
+        },
+        {
+          format: 'umd',
+          name: 'restar-ai-ts',
+          entryFileNames: 'index.umd.cjs',
+          globals: {
+            react: 'React',
+            'react-dom': 'ReactDOM',
+            'react/jsx-runtime': 'jsxRuntime',
+            'react/jsx-dev-runtime': 'jsxDevRuntime',
+            'lucide-react': 'Lucide',
+            'ai': 'Ai',
+            '@ai-sdk/google': 'AiGoogle',
+            '@ai-sdk/openai': 'AiOpenai'
+          }
         }
-      }
-    }
+      ]
+    },
+    minify: true
   }
 })

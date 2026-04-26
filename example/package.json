@@ -10,8 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "lucide-react": "^1.11.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-markdown": "^10.1.0",
+    "ai": "^6.0.168",
+    "@ai-sdk/google": "^3.0.64",
+    "@ai-sdk/openai": "^3.0.53",
+    "restar-ai-ts": "file:.."
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,4 +1,6 @@
-export type NovelaidDocumentType = "novel" | "markdown" | "image" | "chat" | "gitDiff" | "browser" | "css" | "unknown" | "external";
-export const checkType3 = (type: NovelaidDocumentType) => {
-    console.log(type);
-};
+export * from '../src/ai/types';
+export * from '../src/ai/registry';
+export * from '../src/ai/drivers/gemini';
+export * from '../src/ai/drivers/openai';
+export * from '../src/react/useAi';
+export * from '../src/react/AiSettings';

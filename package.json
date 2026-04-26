@@ -1,7 +1,7 @@
 {
   "name": "restar-ai-ts",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,10 +22,18 @@
       "types": "./dist/lib/index.d.ts"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@ai-sdk/google": "^3.0.64",
+    "@ai-sdk/openai": "^3.0.53",
+    "ai": "^6.0.168",
+    "lucide-react": "^1.11.0"
+  },
   "peerDependencies": {
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "ai": "^6.0.168",
+    "@ai-sdk/google": "^3.0.64",
+    "@ai-sdk/openai": "^3.0.53"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

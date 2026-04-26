@@ -1,3 +1,11 @@
+# ReSTAR-AI サンプル
+
+現状、プロジェクト内のライブラリ参照には`npm link`を使っています。
+
+
+
+# TODO
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
