@@ -1,4 +1,4 @@
-import { generateText, streamText } from 'ai';
+import { generateText, streamText, jsonSchema, stepCountIs } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import type { AiDriver, GenerationOptions, ProviderSettings } from '../types';
 
@@ -52,6 +52,15 @@ export class GeminiDriver implements AiDriver {
      * @returns 生成されたテキスト
      */
     async generateText(options: GenerationOptions): Promise<string> {
+        const tools = options.tools?.reduce((acc, tool) => {
+            acc[tool.name] = {
+                description: tool.description,
+                parameters: jsonSchema(tool.parameters),
+                execute: tool.execute,
+            };
+            return acc;
+        }, {} as any);
+
         const { text } = await generateText({
             model: this.getModelInstance(),
             system: options.messages ? undefined : options.system,
@@ -59,6 +68,8 @@ export class GeminiDriver implements AiDriver {
             messages: options.messages as any,
             temperature: options.temperature,
             maxOutputTokens: options.maxTokens,
+            tools: tools,
+            stopWhen: tools ? stepCountIs(5) : undefined,
         });
         return text.trim();
     }
@@ -69,6 +80,15 @@ export class GeminiDriver implements AiDriver {
      * @returns テキストチャンクのストリーム
      */
     async streamText(options: GenerationOptions): Promise<ReadableStream<string>> {
+        const tools = options.tools?.reduce((acc, tool) => {
+            acc[tool.name] = {
+                description: tool.description,
+                parameters: jsonSchema(tool.parameters),
+                execute: tool.execute,
+            };
+            return acc;
+        }, {} as any);
+
         const { textStream } = await streamText({
             model: this.getModelInstance(),
             system: options.messages ? undefined : options.system,
@@ -76,6 +96,8 @@ export class GeminiDriver implements AiDriver {
             messages: options.messages as any,
             temperature: options.temperature,
             maxOutputTokens: options.maxTokens,
+            tools: tools,
+            stopWhen: tools ? stepCountIs(5) : undefined,
         });
         return textStream;
     }
