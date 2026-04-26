@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Settings, RefreshCw, CheckCircle2, AlertCircle, Cpu } from 'lucide-react';
 import type { AiProvider, ProviderSettings } from '../ai/types';
 import { createAiDriver } from '../ai/registry';
 import './AiSettings.css';
@@ -19,6 +19,7 @@ export function AiSettings({
 }: AiSettingsProps) {
     const [testStatus, setTestStatus] = useState<{ success: boolean; message: string } | null>(null);
     const [isTesting, setIsTesting] = useState(false);
+    const [isFetchingModels, setIsFetchingModels] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
 
     const handleTestConnection = async () => {
@@ -36,12 +37,15 @@ export function AiSettings({
     };
 
     const handleFetchModels = async () => {
+        setIsFetchingModels(true);
         try {
             const driver = createAiDriver(provider, settings);
             const models = await driver.fetchModels();
             setAvailableModels(models);
         } catch (error) {
             console.error('Failed to fetch models', error);
+        } finally {
+            setIsFetchingModels(false);
         }
     };
 
@@ -49,67 +53,93 @@ export function AiSettings({
         onSettingsChange({ ...settings, [field]: value });
     };
 
+    const handleProviderChange = (newProvider: AiProvider) => {
+        onProviderChange(newProvider);
+        setAvailableModels([]);
+        setTestStatus(null);
+    };
+
     return (
         <div className="restar-ai-settings">
-            <h2><Settings size={20} /> AI設定</h2>
+            <h2><Settings size={24} /> AI 設定</h2>
             
             <div className="field-group">
-                <label>プロバイダー</label>
-                <select 
-                    value={provider} 
-                    onChange={(e) => onProviderChange(e.target.value as AiProvider)}
-                >
-                    <option value="gemini">Google Gemini</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="lmstudio">LM Studio (OpenAI 互換)</option>
-                </select>
+                <label>AI プロバイダー</label>
+                <div className="field-control">
+                    <select 
+                        value={provider} 
+                        onChange={(e) => handleProviderChange(e.target.value as AiProvider)}
+                    >
+                        <option value="gemini">Google Gemini</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="lmstudio">LM Studio (OpenAI 互換)</option>
+                    </select>
+                </div>
             </div>
 
             <div className="field-group">
                 <label>API キー</label>
-                <input 
-                    type="password" 
-                    value={settings.apiKey} 
-                    onChange={(e) => updateField('apiKey', e.target.value)}
-                    placeholder={provider === 'lmstudio' ? '不要' : 'API キーを入力'}
-                />
+                <div className="field-control">
+                    <input 
+                        type="password" 
+                        value={settings.apiKey} 
+                        onChange={(e) => updateField('apiKey', e.target.value)}
+                        placeholder={provider === 'lmstudio' ? '不要' : 'API キーを入力'}
+                    />
+                </div>
             </div>
 
             {(provider === 'openai' || provider === 'lmstudio') && (
                 <div className="field-group">
                     <label>エンドポイント</label>
-                    <input 
-                        type="text" 
-                        value={settings.endpoint} 
-                        onChange={(e) => updateField('endpoint', e.target.value)}
-                        placeholder={provider === 'lmstudio' ? 'http://localhost:1234/v1' : 'https://api.openai.com/v1'}
-                    />
+                    <div className="field-control">
+                        <input 
+                            type="text" 
+                            value={settings.endpoint} 
+                            onChange={(e) => updateField('endpoint', e.target.value)}
+                            placeholder={provider === 'lmstudio' ? 'http://localhost:1234/v1' : 'https://api.openai.com/v1'}
+                        />
+                    </div>
                 </div>
             )}
 
-            <div className="field-group">
+            <div className="field-group" style={{ alignItems: 'flex-start', paddingTop: '0.5rem' }}>
                 <label>モデル</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input 
-                        type="text" 
-                        value={settings.model} 
-                        onChange={(e) => updateField('model', e.target.value)}
-                        placeholder="使用するモデル名"
-                    />
-                    <button className="btn-secondary" onClick={handleFetchModels} title="モデル一覧を取得">
-                        <RefreshCw size={14} />
-                    </button>
+                <div className="field-control">
+                    <div className="input-with-action">
+                        <input 
+                            type="text" 
+                            value={settings.model} 
+                            onChange={(e) => updateField('model', e.target.value)}
+                            placeholder="使用するモデル名を入力"
+                        />
+                        <button 
+                            className="btn-secondary" 
+                            onClick={handleFetchModels} 
+                            disabled={isFetchingModels}
+                            style={{ padding: '0.25rem 0.75rem', height: 'auto', flex: 'none' }}
+                            title="モデル一覧を取得"
+                        >
+                            <RefreshCw size={14} className={isFetchingModels ? 'spin' : ''} />
+                            {isFetchingModels ? '取得中' : '一覧取得'}
+                        </button>
+                    </div>
+                    
+                    {availableModels.length > 0 && (
+                        <div className="model-chips">
+                            {availableModels.map(m => (
+                                <button 
+                                    key={m}
+                                    className={`chip ${settings.model === m ? 'active' : ''}`}
+                                    onClick={() => updateField('model', m)}
+                                >
+                                    <Cpu size={10} style={{ marginRight: '4px' }} />
+                                    {m}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
-                {availableModels.length > 0 && (
-                    <select 
-                        style={{ marginTop: '0.5rem' }}
-                        onChange={(e) => updateField('model', e.target.value)}
-                        value={settings.model}
-                    >
-                        <option value="">モデルを選択...</option>
-                        {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                )}
             </div>
 
             <div className="actions">
@@ -118,29 +148,37 @@ export function AiSettings({
                     onClick={handleTestConnection} 
                     disabled={isTesting}
                 >
-                    {isTesting ? <RefreshCw size={14} className="spin" /> : '接続テスト'}
+                    {isTesting ? <RefreshCw size={18} className="spin" /> : '接続テスト'}
                 </button>
             </div>
 
             {testStatus && (
                 <div className={`test-result ${testStatus.success ? 'success' : 'error'}`}>
-                    {testStatus.success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-                    <span>{testStatus.message}</span>
+                    {testStatus.success ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                    <div>
+                        <strong style={{ display: 'block', marginBottom: '0.25rem' }}>
+                            {testStatus.success ? '接続成功' : '接続失敗'}
+                        </strong>
+                        <span>{testStatus.message}</span>
+                    </div>
                 </div>
             )}
         </div>
     );
 }
 
-// Simple spin animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes restar-spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    .restar-ai-settings .spin {
-        animation: restar-spin 1s linear infinite;
-    }
-`;
-document.head.appendChild(style);
+// Simple spin animation (injected if not present)
+if (!document.getElementById('restar-ai-style')) {
+    const style = document.createElement('style');
+    style.id = 'restar-ai-style';
+    style.textContent = `
+        @keyframes restar-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .restar-ai-settings .spin {
+            animation: restar-spin 1s linear infinite;
+        }
+    `;
+    document.head.appendChild(style);
+}

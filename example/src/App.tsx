@@ -1,3 +1,4 @@
+// Trigger HMR
 import { useState } from 'react';
 import { MessageSquare, Settings as SettingsIcon, Zap } from 'lucide-react';
 import { AiSettings } from 'restar-ai-ts';
