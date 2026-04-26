@@ -2,12 +2,20 @@ import { generateText, streamText } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import type { AiDriver, GenerationOptions, ProviderSettings } from '../types';
 
+/**
+ * Google Gemini API を使用するためのドライバー実装
+ */
 export class GeminiDriver implements AiDriver {
     private google: any;
     private settings: ProviderSettings;
     private customFetch?: typeof fetch;
     private resolvedApiKey: string;
 
+    /**
+     * GeminiDriver を初期化します
+     * @param settings プロバイダー設定
+     * @param customFetch カスタムfetch関数
+     */
     constructor(settings: ProviderSettings, customFetch?: typeof fetch) {
         this.settings = settings;
         this.customFetch = customFetch;
@@ -38,6 +46,11 @@ export class GeminiDriver implements AiDriver {
         return this.google(this.settings.model || 'gemini-1.5-pro-latest');
     }
 
+    /**
+     * 指定されたオプションでテキストを生成します
+     * @param options 生成オプション
+     * @returns 生成されたテキスト
+     */
     async generateText(options: GenerationOptions): Promise<string> {
         const { text } = await generateText({
             model: this.getModelInstance(),
@@ -50,6 +63,11 @@ export class GeminiDriver implements AiDriver {
         return text.trim();
     }
 
+    /**
+     * 指定されたオプションでテキストをストリーミング生成します
+     * @param options 生成オプション
+     * @returns テキストチャンクのストリーム
+     */
     async streamText(options: GenerationOptions): Promise<ReadableStream<string>> {
         const { textStream } = await streamText({
             model: this.getModelInstance(),
@@ -62,6 +80,10 @@ export class GeminiDriver implements AiDriver {
         return textStream;
     }
 
+    /**
+     * APIへの接続テストを行います
+     * @returns テスト結果
+     */
     async testConnection(): Promise<{ success: boolean; message: string }> {
         try {
             if (!this.resolvedApiKey) {
@@ -83,6 +105,10 @@ export class GeminiDriver implements AiDriver {
         }
     }
 
+    /**
+     * Google AI API から利用可能なモデル一覧を取得します
+     * @returns モデル名の配列
+     */
     async fetchModels(): Promise<string[]> {
         const apiKey = this.resolvedApiKey;
         if (!apiKey) return ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest"];

@@ -1,3 +1,23 @@
+# ReSTAR-AI-ts
+
+
+## 開発環境
+
+
+## ドキュメント
+
+```
+npm install -D typedoc
+npx typedoc --entryPoints lib/index.ts --out docs
+```
+
+
+
+
+
+
+# TODO
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

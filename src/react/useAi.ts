@@ -2,11 +2,22 @@ import { useState, useCallback, useMemo } from 'react';
 import { createAiDriver } from '../ai/registry';
 import type { AiProvider, ProviderSettings, GenerationOptions } from '../ai/types';
 
+/**
+ * useAi フックのオプション
+ */
 export interface UseAiOptions {
+    /** 使用するAIプロバイダー */
     provider: AiProvider;
+    /** プロバイダーの設定 */
     settings: ProviderSettings;
 }
 
+/**
+ * AIによる生成機能を提供するReactフック
+ * 
+ * @param options プロバイダーと設定
+ * @returns 生成用メソッドと状態
+ */
 export function useAi({ provider, settings }: UseAiOptions) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
