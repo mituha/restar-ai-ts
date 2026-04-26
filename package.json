@@ -9,7 +9,21 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
-  "dependencies": {
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./dist/lib/index.d.ts"
+    }
+  },
+  "dependencies": {},
+  "peerDependencies": {
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
