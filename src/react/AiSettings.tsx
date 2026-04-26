@@ -9,13 +9,15 @@ interface AiSettingsProps {
     settings: ProviderSettings;
     onProviderChange: (provider: AiProvider) => void;
     onSettingsChange: (settings: ProviderSettings) => void;
+    customFetch?: typeof fetch;
 }
 
 export function AiSettings({
     provider,
     settings,
     onProviderChange,
-    onSettingsChange
+    onSettingsChange,
+    customFetch
 }: AiSettingsProps) {
     const [testStatus, setTestStatus] = useState<{ success: boolean; message: string } | null>(null);
     const [isTesting, setIsTesting] = useState(false);
@@ -26,7 +28,7 @@ export function AiSettings({
         setIsTesting(true);
         setTestStatus(null);
         try {
-            const driver = createAiDriver(provider, settings);
+            const driver = createAiDriver(provider, settings, { fetch: customFetch });
             const result = await driver.testConnection();
             setTestStatus(result);
         } catch (error: any) {
@@ -39,7 +41,7 @@ export function AiSettings({
     const handleFetchModels = async () => {
         setIsFetchingModels(true);
         try {
-            const driver = createAiDriver(provider, settings);
+            const driver = createAiDriver(provider, settings, { fetch: customFetch });
             const models = await driver.fetchModels();
             setAvailableModels(models);
         } catch (error) {

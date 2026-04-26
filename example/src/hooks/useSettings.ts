@@ -17,7 +17,20 @@ export function useSettings() {
 
     const [allSettings, setAllSettings] = useState<Record<AiProvider, ProviderSettings>>(() => {
         const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-        return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+        if (saved) return JSON.parse(saved);
+
+        // フォールバック：環境変数からの取得を試みる
+        const initial = { ...DEFAULT_SETTINGS };
+        
+        // @ts-ignore
+        const envGemini = import.meta.env?.VITE_GEMINI_API_KEY;
+        if (envGemini) initial.gemini.apiKey = envGemini;
+        
+        // @ts-ignore
+        const envOpenAI = import.meta.env?.VITE_OPENAI_API_KEY;
+        if (envOpenAI) initial.openai.apiKey = envOpenAI;
+
+        return initial;
     });
 
     useEffect(() => {
