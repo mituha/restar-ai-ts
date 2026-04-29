@@ -5,10 +5,11 @@ import dts from 'vite-plugin-dts'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), dts({ 
+  plugins: [react(), dts({
     tsconfigPath: './tsconfig.app.json',
     include: ['src', 'lib'],
-    insertTypesEntry: true
+    insertTypesEntry: true,
+    rollupTypes: true
   })],
   build: {
     lib: {
@@ -21,8 +22,8 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        'react', 
-        'react-dom', 
+        'react',
+        'react-dom',
         'react/jsx-runtime',
         'react/jsx-dev-runtime',
         'lucide-react',
