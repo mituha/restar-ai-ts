@@ -1,13 +1,14 @@
 {
-  "name": "restar-ai-ts",
+  "name": "restar-ai",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "doc": "typedoc --entryPoints src/index.ts --out docs/api"
   },
   "files": [
     "dist"
@@ -22,14 +23,13 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "dependencies": {},
   "peerDependencies": {
     "@ai-sdk/google": "^3.0.64",
     "@ai-sdk/openai": "^3.0.53",
     "ai": "^6.0.168",
+    "lucide-react": "^1.11.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "lucide-react": "^1.11.0"
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

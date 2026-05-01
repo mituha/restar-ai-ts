@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, User, Bot, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { useAi } from 'restar-ai-ts';
-import type { AiProvider, ProviderSettings } from 'restar-ai-ts';
+import { useAi } from 'restar-ai';
+import type { AiProvider, ProviderSettings } from 'restar-ai';
 import './Chat.css';
 
 interface Message {
@@ -39,7 +39,7 @@ export default function Chat({ provider, settings }: ChatProps) {
 
     try {
       await stream(
-        { 
+        {
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
           prompt: '' // Not used when messages is provided
         },

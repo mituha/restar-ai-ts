@@ -16,7 +16,7 @@ export default defineConfig({
       // エントリーポイント（index.ts）を指定
       // なお、src/index.tsの場合、d.tsにtype定義が出力されない。
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'restar-ai-ts',
+      name: 'restar-ai',
       fileName: 'index',
       // formats: ['es', 'umd'] // モダンなESMと、汎用的なUMD両方出すわん デフォルトで両方出す模様
     },
@@ -38,7 +38,7 @@ export default defineConfig({
         },
         {
           format: 'umd',
-          name: 'restar-ai-ts',
+          name: 'restar-ai',
           entryFileNames: 'index.umd.cjs',
           globals: {
             react: 'React',

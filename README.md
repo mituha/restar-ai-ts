@@ -1,4 +1,4 @@
-# ReSTAR-AI-ts
+# ReSTAR-AI
 
 小説執筆アプリである[novelaid-editor](https://github.com/mituha/novelaid-editor)の生成AI使用部分をライブラリ化するためのものです。  
 
@@ -30,8 +30,7 @@
 
 ```
 npm install -D typedoc
-npx typedoc --entryPoints src/index.ts --out docs
-```
+npx typedoc --entryPoints src/index.ts --out docs/api
 
 
 

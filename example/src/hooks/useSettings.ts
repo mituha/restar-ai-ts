@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { AiProvider, ProviderSettings } from 'restar-ai-ts';
+import type { AiProvider, ProviderSettings } from 'restar-ai';
 
 const STORAGE_KEY_PROVIDER = 'restar-ai-provider';
 const STORAGE_KEY_SETTINGS = 'restar-ai-settings';
@@ -21,11 +21,11 @@ export function useSettings() {
 
         // フォールバック：環境変数からの取得を試みる
         const initial = { ...DEFAULT_SETTINGS };
-        
+
         // @ts-ignore
         const envGemini = import.meta.env?.VITE_GEMINI_API_KEY;
         if (envGemini) initial.gemini.apiKey = envGemini;
-        
+
         // @ts-ignore
         const envOpenAI = import.meta.env?.VITE_OPENAI_API_KEY;
         if (envOpenAI) initial.openai.apiKey = envOpenAI;

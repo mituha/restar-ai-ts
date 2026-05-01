@@ -1,7 +1,7 @@
 // Trigger HMR
 import { useState } from 'react';
 import { MessageSquare, Settings as SettingsIcon, Zap } from 'lucide-react';
-import { AiSettings } from 'restar-ai-ts';
+import { AiSettings } from 'restar-ai';
 import { useSettings } from './hooks/useSettings';
 import Chat from './components/Chat';
 import './App.css';
@@ -18,15 +18,15 @@ function App() {
           <span>ReSTAR AI</span>
         </div>
         <nav>
-          <button 
-            className={activeTab === 'chat' ? 'active' : ''} 
+          <button
+            className={activeTab === 'chat' ? 'active' : ''}
             onClick={() => setActiveTab('chat')}
           >
             <MessageSquare size={20} />
             <span>Chat</span>
           </button>
-          <button 
-            className={activeTab === 'settings' ? 'active' : ''} 
+          <button
+            className={activeTab === 'settings' ? 'active' : ''}
             onClick={() => setActiveTab('settings')}
           >
             <SettingsIcon size={20} />
@@ -34,13 +34,13 @@ function App() {
           </button>
         </nav>
       </aside>
-      
+
       <main className="content">
         {activeTab === 'chat' ? (
           <Chat provider={provider} settings={settings} />
         ) : (
           <div className="settings-wrapper">
-            <AiSettings 
+            <AiSettings
               provider={provider}
               settings={settings}
               onProviderChange={setProvider}
