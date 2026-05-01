@@ -1,7 +1,7 @@
 {
   "name": "restar-ai-ts",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,22 +22,19 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "dependencies": {
-    "@ai-sdk/google": "^3.0.64",
-    "@ai-sdk/openai": "^3.0.53",
-    "ai": "^6.0.168",
-    "lucide-react": "^1.11.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "@ai-sdk/google": "^3.0.64",
     "@ai-sdk/openai": "^3.0.53",
     "ai": "^6.0.168",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "lucide-react": "^1.11.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.12.2",
+    "@microsoft/api-extractor": "^7.58.7",
+    "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -49,6 +46,6 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^5.0.0"
   }
 }

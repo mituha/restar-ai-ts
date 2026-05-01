@@ -7,15 +7,15 @@ import dts from 'vite-plugin-dts'
 export default defineConfig({
   plugins: [react(), dts({
     tsconfigPath: './tsconfig.app.json',
-    include: ['src', 'lib'],
+    include: ['src'],
     insertTypesEntry: true,
-    rollupTypes: true
+    bundleTypes: true
   })],
   build: {
     lib: {
       // エントリーポイント（index.ts）を指定
       // なお、src/index.tsの場合、d.tsにtype定義が出力されない。
-      entry: resolve(__dirname, 'lib/index.ts'),
+      entry: resolve(__dirname, 'src/index.ts'),
       name: 'restar-ai-ts',
       fileName: 'index',
       // formats: ['es', 'umd'] // モダンなESMと、汎用的なUMD両方出すわん デフォルトで両方出す模様
@@ -35,11 +35,6 @@ export default defineConfig({
           format: 'es',
           entryFileNames: 'index.js',
           preserveModules: false,
-          globals: {
-            react: 'React',
-            'react-dom': 'ReactDOM',
-            'lucide-react': 'Lucide'
-          }
         },
         {
           format: 'umd',
