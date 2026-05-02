@@ -99,6 +99,10 @@ export interface GenerationOptions {
     messages?: AiMessage[];
     /** 使用可能なツール */
     tools?: AiTool[];
+    /** 思考プロセス（Reasoning）を有効にするか（対応モデルのみ） */
+    enableThinking?: boolean;
+    /** 思考に使用する最大トークン数（対応モデルのみ） */
+    thinkingBudget?: number;
 }
 
 /**

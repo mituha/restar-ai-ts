@@ -14,6 +14,7 @@ export default function Chat({ provider, settings }: ChatProps) {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState('');
   const [showThought, setShowThought] = useState(true);
+  const [enableThinking, setEnableThinking] = useState(false);
   const { stream, isGenerating, error } = useAi({ provider, settings });
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -49,7 +50,9 @@ export default function Chat({ provider, settings }: ChatProps) {
       await stream(
         {
           messages: newMessages,
-          prompt: ''
+          prompt: '',
+          enableThinking: enableThinking,
+          thinkingBudget: 2048
         },
         (chunk) => {
           setMessages(prev => {
@@ -129,22 +132,34 @@ export default function Chat({ provider, settings }: ChatProps) {
         <div ref={scrollRef} />
       </div>
 
-      <div className="input-area">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          placeholder="AIにメッセージを送る..."
-          rows={1}
-        />
-        <button onClick={handleSend} disabled={isGenerating || !input.trim()}>
-          <Send size={18} />
-        </button>
+      <div className="input-area-wrapper">
+        <div className="input-toolbar">
+          <label className="thought-toggle">
+            <input 
+              type="checkbox" 
+              checked={enableThinking} 
+              onChange={(e) => setEnableThinking(e.target.checked)} 
+            />
+            <span>思考機能を有効化 (Thinking Mode)</span>
+          </label>
+        </div>
+        <div className="input-area">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="AIにメッセージを送る..."
+            rows={1}
+          />
+          <button onClick={handleSend} disabled={isGenerating || !input.trim()}>
+            <Send size={18} />
+          </button>
+        </div>
       </div>
     </div>
   );

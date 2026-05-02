@@ -127,6 +127,12 @@ export class GeminiDriver implements AiDriver {
             args.prompt = options.prompt;
         }
 
+        if (options.enableThinking) {
+            args.experimental_thinking = {
+                budgetTokens: options.thinkingBudget || 1024
+            };
+        }
+
         const result: any = await generateText(args);
         const { text, toolCalls, usage, finishReason, responseMessages } = result;
 
@@ -188,6 +194,12 @@ export class GeminiDriver implements AiDriver {
         } else {
             args.system = options.system;
             args.prompt = options.prompt;
+        }
+
+        if (options.enableThinking) {
+            args.experimental_thinking = {
+                budgetTokens: options.thinkingBudget || 1024
+            };
         }
 
         const { fullStream } = await streamText(args);
