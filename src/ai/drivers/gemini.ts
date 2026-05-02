@@ -128,7 +128,7 @@ export class GeminiDriver implements AiDriver {
         }
 
         if (options.enableThinking) {
-            args.experimental_thinking = {
+            args.thinking = {
                 budgetTokens: options.thinkingBudget || 1024
             };
         }
@@ -206,6 +206,7 @@ export class GeminiDriver implements AiDriver {
 
         return fullStream.pipeThrough(new TransformStream({
             transform(chunk: any, controller) {
+                console.log('[Gemini Driver] Raw Chunk:', chunk);
                 switch (chunk.type) {
                     case 'text-delta':
                         controller.enqueue({ type: 'text', content: chunk.text || chunk.textDelta || '' });

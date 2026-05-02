@@ -42,6 +42,7 @@ export function useAi({ provider, settings }: UseAiOptions) {
     const stream = useCallback(async (options: GenerationOptions, onChunk: (chunk: AiStreamChunk) => void) => {
         setIsGenerating(true);
         setError(null);
+        console.log('[useAi] Streaming options:', options);
         try {
             const chunkStream = await driver.streamText(options);
             const reader = chunkStream.getReader();
@@ -50,6 +51,8 @@ export function useAi({ provider, settings }: UseAiOptions) {
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
+                
+                console.log('[useAi] Mapped Chunk:', value);
                 
                 if (value.type === 'text') {
                     fullText += value.content;
