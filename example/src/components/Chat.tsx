@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Trash2, Brain } from 'lucide-react';
+import { User, Bot, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { useAi } from 'restar-ai';
+import { useAi, AiChatInput } from 'restar-ai';
 import type { AiProvider, ProviderSettings, AiMessage } from 'restar-ai';
 import './Chat.css';
 
@@ -10,15 +10,18 @@ interface ChatProps {
   settings: ProviderSettings;
 }
 
+/**
+ * シンプルなチャット UI コンポーネント
+ * 
+ * ライブラリの基本機能（ストリーミング生成）を利用した標準的なチャットを提供します。
+ */
 export default function Chat({ provider, settings }: ChatProps) {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState('');
-  const [showThought, setShowThought] = useState(true);
-  const [enableThinking, setEnableThinking] = useState(false);
-  const [useStream, setUseStream] = useState(true);
-  const { generate, stream, isGenerating, error } = useAi({ provider, settings });
+  const { stream, isGenerating, error } = useAi({ provider, settings });
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // 新しいメッセージが追加されたらスクロール
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -37,60 +40,34 @@ export default function Chat({ provider, settings }: ChatProps) {
     setMessages(newMessages);
     setInput('');
 
-    // Assistant message placeholder
+    // アシスタントの応答用プレースホルダー
     const assistantMsg: AiMessage = {
       id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
       role: 'assistant',
       content: '',
-      thought: '',
       timestamp: Date.now()
     };
     setMessages(prev => [...prev, assistantMsg]);
 
-    const options = {
-      messages: newMessages,
-      prompt: '',
-      enableThinking: enableThinking,
-      thinkingBudget: 2048
-    };
-
     try {
-      if (useStream) {
-        await stream(
-          options,
-          (chunk) => {
+      // ストリーミング生成を実行
+      await stream(
+        { messages: newMessages, prompt: '' },
+        (chunk) => {
+          if (chunk.type === 'text') {
             setMessages(prev => {
               const last = prev[prev.length - 1];
               if (last && last.role === 'assistant') {
-                if (chunk.type === 'text') {
-                  return [
-                    ...prev.slice(0, -1),
-                    { ...last, content: (last.content as string) + chunk.content }
-                  ];
-                } else if (chunk.type === 'thought') {
-                  return [
-                    ...prev.slice(0, -1),
-                    { ...last, thought: (last.thought || '') + chunk.content }
-                  ];
-                }
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, content: (last.content as string) + chunk.content }
+                ];
               }
               return prev;
             });
           }
-        );
-      } else {
-        const result = await generate(options);
-        setMessages(prev => {
-          const last = prev[prev.length - 1];
-          if (last && last.role === 'assistant') {
-            return [
-              ...prev.slice(0, -1),
-              { ...last, content: result.content, thought: result.thought }
-            ];
-          }
-          return prev;
-        });
-      }
+        }
+      );
     } catch (err) {
       console.error('Chat error:', err);
     }
@@ -101,18 +78,8 @@ export default function Chat({ provider, settings }: ChatProps) {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <div className="header-left">
-          <h2>AI Chat</h2>
-          <label className="thought-toggle">
-            <input 
-              type="checkbox" 
-              checked={showThought} 
-              onChange={(e) => setShowThought(e.target.checked)} 
-            />
-            <span>思考を表示</span>
-          </label>
-        </div>
-        <button onClick={clearChat} title="Clear Chat">
+        <h2>Simple Chat</h2>
+        <button onClick={clearChat} title="履歴をクリア">
           <Trash2 size={18} />
         </button>
       </div>
@@ -130,27 +97,9 @@ export default function Chat({ provider, settings }: ChatProps) {
               {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
             </div>
             <div className="message-content">
-              {msg.role === 'assistant' && msg.thought && showThought && (
-                <div className="thought-area">
-                  <div className="thought-header">
-                    <Brain size={12} />
-                    <span>Thought</span>
-                  </div>
-                  <ReactMarkdown>{msg.thought}</ReactMarkdown>
-                </div>
-              )}
-              {msg.role === 'assistant' && isGenerating && i === messages.length - 1 && !msg.thought && !msg.content && (
-                <div className="thinking-indicator">
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                </div>
-              )}
-              {(msg.content || (msg.role === 'assistant' && !isGenerating)) && (
-                <div className="text-area">
-                  <ReactMarkdown>{typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}</ReactMarkdown>
-                </div>
-              )}
+              <ReactMarkdown>
+                {typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}
+              </ReactMarkdown>
             </div>
           </div>
         ))}
@@ -159,41 +108,13 @@ export default function Chat({ provider, settings }: ChatProps) {
       </div>
 
       <div className="input-area-wrapper">
-        <div className="input-toolbar">
-          <label className="thought-toggle">
-            <input 
-              type="checkbox" 
-              checked={useStream} 
-              onChange={(e) => setUseStream(e.target.checked)} 
-            />
-            <span>ストリーミング (Stream)</span>
-          </label>
-          <label className="thought-toggle">
-            <input 
-              type="checkbox" 
-              checked={enableThinking} 
-              onChange={(e) => setEnableThinking(e.target.checked)} 
-            />
-            <span>思考有効化 (Thinking Mode)</span>
-          </label>
-        </div>
-        <div className="input-area">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="AIにメッセージを送る..."
-            rows={1}
-          />
-          <button onClick={handleSend} disabled={isGenerating || !input.trim()}>
-            <Send size={18} />
-          </button>
-        </div>
+        <AiChatInput 
+          value={input}
+          onChange={setInput}
+          onSend={handleSend}
+          isStreaming={isGenerating}
+          placeholder="AIにメッセージを送る..."
+        />
       </div>
     </div>
   );

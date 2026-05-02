@@ -1,6 +1,6 @@
 {
   "name": "restar-ai",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "novelaid-editor用生成AI利用ライブラリ",
   "author": "Mizuki Mituha",
   "repository": {
@@ -28,7 +28,8 @@
       "import": "./dist/index.js",
       "require": "./dist/index.umd.cjs",
       "types": "./dist/index.d.ts"
-    }
+    },
+    "./index.css": "./dist/index.css"
   },
   "peerDependencies": {
     "@ai-sdk/google": "^3.0.64",

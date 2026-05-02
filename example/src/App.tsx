@@ -1,13 +1,14 @@
 // Trigger HMR
 import { useState } from 'react';
-import { MessageSquare, Settings as SettingsIcon, Zap } from 'lucide-react';
+import { MessageSquare, Settings as SettingsIcon, Zap, Sparkles } from 'lucide-react';
 import { AiSettings } from 'restar-ai';
 import { useSettings } from './hooks/useSettings';
 import Chat from './components/Chat';
+import AdvancedChat from './components/AdvancedChat';
 import './App.css';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'chat' | 'settings'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'advanced' | 'settings'>('chat');
   const { provider, setProvider, settings, updateProviderSettings } = useSettings();
 
   return (
@@ -26,6 +27,13 @@ function App() {
             <span>Chat</span>
           </button>
           <button
+            className={activeTab === 'advanced' ? 'active' : ''}
+            onClick={() => setActiveTab('advanced')}
+          >
+            <Sparkles size={20} />
+            <span>Advanced</span>
+          </button>
+          <button
             className={activeTab === 'settings' ? 'active' : ''}
             onClick={() => setActiveTab('settings')}
           >
@@ -38,6 +46,8 @@ function App() {
       <main className="content">
         {activeTab === 'chat' ? (
           <Chat provider={provider} settings={settings} />
+        ) : activeTab === 'advanced' ? (
+          <AdvancedChat provider={provider} settings={settings} />
         ) : (
           <div className="settings-wrapper">
             <AiSettings

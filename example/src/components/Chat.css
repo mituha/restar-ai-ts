@@ -216,55 +216,17 @@
   gap: 0.75rem;
 }
 
-.input-toolbar {
+.input-extra-info {
   display: flex;
-  justify-content: flex-start;
-}
-
-.input-area {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-}
-
-textarea {
-  flex: 1;
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  resize: none;
-  font-family: inherit;
-  font-size: 0.95rem;
-  max-height: 200px;
-}
-
-textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.input-area button {
-  background: var(--accent);
-  color: #0f172a;
-  border: none;
-  width: 42px;
-  height: 42px;
-  border-radius: 0.75rem;
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.input-area button:hover:not(:disabled) {
-  background: #7dd3fc;
-  transform: translateY(-1px);
+.input-extra-info .hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
 }
 
-.input-area button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.display-label {
+  font-size: 0.95rem;
 }

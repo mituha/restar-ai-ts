@@ -33,10 +33,9 @@ export interface AiChatInputProps {
 }
 
 /**
- * 小分けにされた AI チャット入力コンポーネント
+ * 一般的なチャットアプリに近い、モダンな AI チャット入力コンポーネント。
  * 
- * 自動リサイズ対応のテキストエリア、送信/停止ボタン、および
- * 思考プロセスやツールの切り替えトグルを提供します。
+ * 上部に入力エリア、下部に機能トグルと送信アクションを配置します。
  */
 export function AiChatInput({
     value,
@@ -57,7 +56,7 @@ export function AiChatInput({
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 300)}px`;
         }
     }, [value]);
 
@@ -72,28 +71,6 @@ export function AiChatInput({
 
     return (
         <div className="restar-ai-chat-input-container">
-            <div className="input-toolbar">
-                {onUseThinkingChange && (
-                    <button 
-                        className={`tool-toggle ${useThinking ? 'active' : ''}`}
-                        onClick={() => onUseThinkingChange(!useThinking)}
-                        title="思考プロセスを有効化"
-                    >
-                        <Lightbulb size={14} />
-                        <span>思考</span>
-                    </button>
-                )}
-                {onUseToolsChange && (
-                    <button 
-                        className={`tool-toggle ${useTools ? 'active' : ''}`}
-                        onClick={() => onUseToolsChange(!useTools)}
-                        title="ツールの使用を許可"
-                    >
-                        <Hammer size={14} />
-                        <span>ツール</span>
-                    </button>
-                )}
-            </div>
             <div className="input-wrapper">
                 <textarea
                     ref={textareaRef}
@@ -104,27 +81,55 @@ export function AiChatInput({
                     disabled={disabled}
                     rows={1}
                 />
-                <div className="input-actions">
-                    {isStreaming ? (
-                        <button 
-                            className="btn-stop" 
-                            onClick={onStop} 
-                            title="生成を停止"
-                            type="button"
-                        >
-                            <Square size={16} fill="currentColor" />
-                        </button>
-                    ) : (
-                        <button 
-                            className="btn-send" 
-                            onClick={onSend}
-                            disabled={disabled || !value.trim()}
-                            title="送信"
-                            type="button"
-                        >
-                            <Send size={18} />
-                        </button>
-                    )}
+                
+                <div className="input-footer">
+                    <div className="input-toolbar">
+                        {onUseThinkingChange && (
+                            <button 
+                                type="button"
+                                className={`feature-toggle ${useThinking ? 'active' : ''}`}
+                                onClick={() => onUseThinkingChange(!useThinking)}
+                                title="思考プロセスを有効化"
+                            >
+                                <Lightbulb size={14} />
+                                <span>思考</span>
+                            </button>
+                        )}
+                        {onUseToolsChange && (
+                            <button 
+                                type="button"
+                                className={`feature-toggle ${useTools ? 'active' : ''}`}
+                                onClick={() => onUseToolsChange(!useTools)}
+                                title="ツールの使用を許可"
+                            >
+                                <Hammer size={14} />
+                                <span>ツール</span>
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="input-actions">
+                        {isStreaming ? (
+                            <button 
+                                className="btn-stop" 
+                                onClick={onStop} 
+                                title="生成を停止"
+                                type="button"
+                            >
+                                <Square size={14} fill="currentColor" />
+                            </button>
+                        ) : (
+                            <button 
+                                className="btn-send" 
+                                onClick={onSend}
+                                disabled={disabled || !value.trim()}
+                                title="送信 (Enter)"
+                                type="button"
+                            >
+                                <Send size={16} />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
