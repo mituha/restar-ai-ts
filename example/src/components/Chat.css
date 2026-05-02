@@ -25,6 +25,35 @@
   font-weight: 600;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.thought-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+}
+
+.thought-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+.thought-toggle input {
+  margin: 0;
+  cursor: pointer;
+}
+
 .chat-header button {
   background: transparent;
   border: none;
@@ -106,6 +135,38 @@
 .assistant .message-content {
   background: #1e293b;
   border: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+}
+
+.thought-area {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 2px solid var(--accent);
+  border-radius: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.thought-header {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.thought-area p {
+  margin: 0.25rem 0;
+}
+
+.text-area {
+  width: 100%;
 }
 
 .message-content p {

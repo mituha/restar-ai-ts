@@ -21,6 +21,69 @@ export interface ProviderSettings {
 export type AllProviderSettings = Record<AiProvider, ProviderSettings>;
 
 /**
+ * メッセージのロール
+ */
+export type AiMessageRole = 'system' | 'user' | 'assistant' | 'tool';
+
+/**
+ * コンテンツの構成要素（マルチモーダル対応用）
+ */
+export type AiContentPart = 
+    | { type: 'text'; text: string }
+    | { type: 'image'; image: string; mimeType: string };
+
+/**
+ * ツール呼び出しの詳細
+ */
+export interface AiToolCall {
+    id: string;
+    name: string;
+    args: any;
+}
+
+/**
+ * メッセージに付随するメタデータ
+ */
+export interface AiMessageMetadata {
+    /** 生成を行ったエージェントのID */
+    agentId?: string;
+    /** 使用されたモデル名 */
+    model?: string;
+    /** トークン使用量 */
+    usage?: {
+        promptTokens: number;
+        completionTokens: number;
+        totalTokens: number;
+    };
+    /** 生成終了理由（stop, length, tool_calls等） */
+    finishReason?: string;
+    /** その他プロバイダー固有の情報 */
+    [key: string]: any;
+}
+
+/**
+ * AIとのやり取りを構成する単一のメッセージ
+ */
+export interface AiMessage {
+    /** メッセージの一意識別子 (UUID等) */
+    id: string;
+    /** ロール（system, user, assistant, tool） */
+    role: AiMessageRole;
+    /** メッセージの主内容。テキスト形式、またはパーツの配列 */
+    content: string | AiContentPart[];
+    /** モデルの推論・思考過程（存在する場合） */
+    thought?: string;
+    /** 作成日時（ミリ秒単位のUnixタイムスタンプ） */
+    timestamp: number;
+    /** アシスタントによるツール呼び出しのリスト（roleがassistantの場合） */
+    toolCalls?: AiToolCall[];
+    /** ツール実行結果の参照ID（roleがtoolの場合） */
+    toolCallId?: string;
+    /** 拡張メタデータ */
+    metadata?: AiMessageMetadata;
+}
+
+/**
  * テキスト生成時のオプション
  */
 export interface GenerationOptions {
@@ -33,16 +96,7 @@ export interface GenerationOptions {
     /** 最大出力トークン数 */
     maxTokens?: number;
     /** メッセージ履歴（チャット形式の場合に使用） */
-    messages?: Array<{ 
-        /** ロール（user, assistant, system, tool） */
-        role: 'user' | 'assistant' | 'system' | 'tool'; 
-        /** メッセージ内容 */
-        content: string;
-        /** ツール呼び出しID（ロールが tool の場合や assistant がツールを呼ぶ場合） */
-        toolCallId?: string;
-        /** ツール名（ロールが assistant がツールを呼ぶ場合） */
-        toolName?: string;
-    }>;
+    messages?: AiMessage[];
     /** 使用可能なツール */
     tools?: AiTool[];
 }
@@ -75,7 +129,7 @@ export interface AiAgent extends AiTool {
     /** エージェントが利用可能なツールのリスト */
     tools?: AiTool[];
     /** チャットを実行します */
-    chat(message: string): Promise<string>;
+    chat(message: string): Promise<AiMessage>;
 }
 
 /**
@@ -89,22 +143,34 @@ export interface AiPipeline extends AiTool {
 }
 
 /**
+ * ストリーミング時のデータチャンク
+ */
+export interface AiStreamChunk {
+    /** チャンクの種別 */
+    type: 'text' | 'thought' | 'tool-call' | 'error';
+    /** チャンクの内容 */
+    content: string;
+    /** 追加情報（ツール呼び出しID等） */
+    metadata?: any;
+}
+
+/**
  * 各AIプロバイダーを抽象化するドライバーインターフェース
  */
 export interface AiDriver {
     /**
      * テキストを生成します
      * @param options 生成オプション
-     * @returns 生成されたテキスト
+     * @returns 生成されたメッセージ
      */
-    generateText(options: GenerationOptions): Promise<string>;
+    generateText(options: GenerationOptions): Promise<AiMessage>;
 
     /**
      * テキストをストリーミング形式で生成します
      * @param options 生成オプション
-     * @returns テキストチャンクの ReadableStream
+     * @returns チャンクの ReadableStream
      */
-    streamText(options: GenerationOptions): Promise<ReadableStream<string>>;
+    streamText(options: GenerationOptions): Promise<ReadableStream<AiStreamChunk>>;
 
     /**
      * APIへの接続テストを行います

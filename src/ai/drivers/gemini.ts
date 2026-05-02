@@ -1,6 +1,6 @@
 import { generateText, streamText, jsonSchema, stepCountIs } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import type { AiDriver, GenerationOptions, ProviderSettings } from '../types';
+import type { AiDriver, GenerationOptions, ProviderSettings, AiMessage, AiStreamChunk } from '../types';
 
 /**
  * Google Gemini API を使用するためのドライバー実装
@@ -47,11 +47,62 @@ export class GeminiDriver implements AiDriver {
     }
 
     /**
+     * AiMessage 配列を SDK が期待する形式に変換します
+     */
+    private mapMessages(messages: AiMessage[]): any[] {
+        return messages.map(msg => {
+            const { role, content } = msg;
+
+            if (role === 'tool') {
+                return {
+                    role: 'tool',
+                    content: [
+                        {
+                            type: 'tool-result',
+                            toolCallId: msg.toolCallId || 'unknown',
+                            toolName: 'unknown',
+                            result: content,
+                        }
+                    ]
+                };
+            }
+
+            if (role === 'assistant' && msg.toolCalls && msg.toolCalls.length > 0) {
+                return {
+                    role: 'assistant',
+                    content: [
+                        { type: 'text', text: typeof content === 'string' ? content : '' },
+                        ...msg.toolCalls.map(tc => ({
+                            type: 'tool-call',
+                            toolCallId: tc.id,
+                            toolName: tc.name,
+                            args: tc.args
+                        }))
+                    ]
+                };
+            }
+
+            if (Array.isArray(content)) {
+                return {
+                    role,
+                    content: content.map(part => {
+                        if (part.type === 'text') return { type: 'text', text: part.text };
+                        if (part.type === 'image') return { type: 'image', image: part.image, mimeType: part.mimeType };
+                        return part;
+                    })
+                };
+            }
+
+            return { role, content };
+        });
+    }
+
+    /**
      * 指定されたオプションでテキストを生成します
      * @param options 生成オプション
-     * @returns 生成されたテキスト
+     * @returns 生成されたメッセージ
      */
-    async generateText(options: GenerationOptions): Promise<string> {
+    async generateText(options: GenerationOptions): Promise<AiMessage> {
         const tools = options.tools?.reduce((acc, tool) => {
             acc[tool.name] = {
                 description: tool.description,
@@ -61,25 +112,60 @@ export class GeminiDriver implements AiDriver {
             return acc;
         }, {} as any);
 
-        const { text } = await generateText({
+        const args: any = {
             model: this.getModelInstance(),
-            system: options.messages ? undefined : options.system,
-            prompt: options.messages ? undefined : options.prompt,
-            messages: options.messages as any,
             temperature: options.temperature,
             maxOutputTokens: options.maxTokens,
             tools: tools,
             stopWhen: tools ? stepCountIs(5) : undefined,
-        });
-        return text.trim();
+        };
+
+        if (options.messages) {
+            args.messages = this.mapMessages(options.messages);
+        } else {
+            args.system = options.system;
+            args.prompt = options.prompt;
+        }
+
+        const result: any = await generateText(args);
+        const { text, toolCalls, usage, finishReason, responseMessages } = result;
+
+        const lastMsg = responseMessages ? responseMessages[responseMessages.length - 1] : undefined;
+        let thought: string | undefined = undefined;
+        if (lastMsg && lastMsg.content && Array.isArray(lastMsg.content)) {
+            const thoughtPart = lastMsg.content.find((p: any) => p.type === 'thought' || p.type === 'reasoning');
+            if (thoughtPart) thought = thoughtPart.text || thoughtPart.thought;
+        }
+
+        return {
+            id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
+            role: 'assistant',
+            content: text,
+            thought,
+            timestamp: Date.now(),
+            toolCalls: toolCalls?.map((tc: any) => ({
+                id: tc.toolCallId || tc.id,
+                name: tc.toolName || tc.name,
+                args: tc.args
+            })),
+            metadata: {
+                model: this.settings.model,
+                usage: usage ? {
+                    promptTokens: usage.promptTokens || usage.prompt_tokens || 0,
+                    completionTokens: usage.completionTokens || usage.completion_tokens || 0,
+                    totalTokens: usage.totalTokens || usage.total_tokens || 0
+                } : undefined,
+                finishReason
+            }
+        };
     }
 
     /**
      * 指定されたオプションでテキストをストリーミング生成します
      * @param options 生成オプション
-     * @returns テキストチャンクのストリーム
+     * @returns チャンクのストリーム
      */
-    async streamText(options: GenerationOptions): Promise<ReadableStream<string>> {
+    async streamText(options: GenerationOptions): Promise<ReadableStream<AiStreamChunk>> {
         const tools = options.tools?.reduce((acc, tool) => {
             acc[tool.name] = {
                 description: tool.description,
@@ -89,17 +175,44 @@ export class GeminiDriver implements AiDriver {
             return acc;
         }, {} as any);
 
-        const { textStream } = await streamText({
+        const args: any = {
             model: this.getModelInstance(),
-            system: options.messages ? undefined : options.system,
-            prompt: options.messages ? undefined : options.prompt,
-            messages: options.messages as any,
             temperature: options.temperature,
             maxOutputTokens: options.maxTokens,
             tools: tools,
             stopWhen: tools ? stepCountIs(5) : undefined,
-        });
-        return textStream;
+        };
+
+        if (options.messages) {
+            args.messages = this.mapMessages(options.messages);
+        } else {
+            args.system = options.system;
+            args.prompt = options.prompt;
+        }
+
+        const { fullStream } = await streamText(args);
+
+        return fullStream.pipeThrough(new TransformStream({
+            transform(chunk: any, controller) {
+                switch (chunk.type) {
+                    case 'text-delta':
+                        controller.enqueue({ type: 'text', content: chunk.textDelta || chunk.text || '' });
+                        break;
+                    case 'reasoning-delta':
+                        controller.enqueue({ type: 'thought', content: chunk.reasoningDelta || chunk.reasoning || '' });
+                        break;
+                    case 'thought-delta':
+                        controller.enqueue({ type: 'thought', content: chunk.thoughtDelta || chunk.thought || '' });
+                        break;
+                    case 'tool-call':
+                        controller.enqueue({ type: 'tool-call', content: '', metadata: chunk });
+                        break;
+                    case 'error':
+                        controller.enqueue({ type: 'error', content: String(chunk.error) });
+                        break;
+                }
+            }
+        })) as ReadableStream<AiStreamChunk>;
     }
 
     /**
@@ -112,9 +225,11 @@ export class GeminiDriver implements AiDriver {
                 return { success: false, message: 'APIキーが設定されていません。' };
             }
 
-            const text = await this.generateText({
+            const message = await this.generateText({
                 prompt: 'Hi! Connection test. Reply with "SUCCESS".'
             });
+
+            const text = typeof message.content === 'string' ? message.content : JSON.stringify(message.content);
 
             if (text && text.length > 0) {
                 return { success: true, message: `接続成功: ${text}` };

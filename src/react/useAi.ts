@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { createAiDriver } from '../ai/registry';
-import type { AiProvider, ProviderSettings, GenerationOptions } from '../ai/types';
+import type { AiProvider, ProviderSettings, GenerationOptions, AiStreamChunk } from '../ai/types';
 
 /**
  * useAi フックのオプション
@@ -39,18 +39,21 @@ export function useAi({ provider, settings }: UseAiOptions) {
         }
     }, [driver]);
 
-    const stream = useCallback(async (options: GenerationOptions, onChunk: (chunk: string) => void) => {
+    const stream = useCallback(async (options: GenerationOptions, onChunk: (chunk: AiStreamChunk) => void) => {
         setIsGenerating(true);
         setError(null);
         try {
-            const textStream = await driver.streamText(options);
-            const reader = textStream.getReader();
+            const chunkStream = await driver.streamText(options);
+            const reader = chunkStream.getReader();
             let fullText = '';
             
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                fullText += value;
+                
+                if (value.type === 'text') {
+                    fullText += value.content;
+                }
                 onChunk(value);
             }
             return fullText;

@@ -1,14 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Trash2 } from 'lucide-react';
+import { Send, User, Bot, Trash2, Brain } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAi } from 'restar-ai';
-import type { AiProvider, ProviderSettings } from 'restar-ai';
+import type { AiProvider, ProviderSettings, AiMessage } from 'restar-ai';
 import './Chat.css';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 interface ChatProps {
   provider: AiProvider;
@@ -16,8 +11,9 @@ interface ChatProps {
 }
 
 export default function Chat({ provider, settings }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState('');
+  const [showThought, setShowThought] = useState(true);
   const { stream, isGenerating, error } = useAi({ provider, settings });
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -28,26 +24,48 @@ export default function Chat({ provider, settings }: ChatProps) {
   const handleSend = async () => {
     if (!input.trim() || isGenerating) return;
 
-    const userMsg: Message = { role: 'user', content: input };
+    const userMsg: AiMessage = {
+      id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
+      role: 'user',
+      content: input,
+      timestamp: Date.now()
+    };
+    
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
 
     // Assistant message placeholder
-    const assistantMsg: Message = { role: 'assistant', content: '' };
+    const assistantMsg: AiMessage = {
+      id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
+      role: 'assistant',
+      content: '',
+      thought: '',
+      timestamp: Date.now()
+    };
     setMessages(prev => [...prev, assistantMsg]);
 
     try {
       await stream(
         {
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          prompt: '' // Not used when messages is provided
+          messages: newMessages,
+          prompt: ''
         },
         (chunk) => {
           setMessages(prev => {
             const last = prev[prev.length - 1];
             if (last && last.role === 'assistant') {
-              return [...prev.slice(0, -1), { ...last, content: last.content + chunk }];
+              if (chunk.type === 'text') {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, content: (last.content as string) + chunk.content }
+                ];
+              } else if (chunk.type === 'thought') {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, thought: (last.thought || '') + chunk.content }
+                ];
+              }
             }
             return prev;
           });
@@ -63,7 +81,17 @@ export default function Chat({ provider, settings }: ChatProps) {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h2>AI Chat</h2>
+        <div className="header-left">
+          <h2>AI Chat</h2>
+          <label className="thought-toggle">
+            <input 
+              type="checkbox" 
+              checked={showThought} 
+              onChange={(e) => setShowThought(e.target.checked)} 
+            />
+            <span>思考を表示</span>
+          </label>
+        </div>
         <button onClick={clearChat} title="Clear Chat">
           <Trash2 size={18} />
         </button>
@@ -77,12 +105,23 @@ export default function Chat({ provider, settings }: ChatProps) {
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={i} className={`message-item ${msg.role}`}>
+          <div key={msg.id || i} className={`message-item ${msg.role}`}>
             <div className="avatar">
               {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
             </div>
             <div className="message-content">
-              <ReactMarkdown>{msg.content}</ReactMarkdown>
+              {msg.role === 'assistant' && msg.thought && showThought && (
+                <div className="thought-area">
+                  <div className="thought-header">
+                    <Brain size={12} />
+                    <span>Thought</span>
+                  </div>
+                  <ReactMarkdown>{msg.thought}</ReactMarkdown>
+                </div>
+              )}
+              <div className="text-area">
+                <ReactMarkdown>{typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}</ReactMarkdown>
+              </div>
             </div>
           </div>
         ))}

@@ -1,4 +1,4 @@
-import type { AiAgent, AiDriver, AiTool, GenerationOptions } from './types';
+import type { AiAgent, AiDriver, AiTool, AiMessage } from './types';
 
 /**
  * エージェントの基本実装クラス
@@ -11,7 +11,7 @@ export class BaseAgent implements AiAgent {
     public driver: AiDriver;
     public tools: AiTool[];
     
-    protected messages: NonNullable<GenerationOptions['messages']> = [];
+    protected messages: AiMessage[] = [];
 
     constructor(config: {
         name: string;
@@ -40,25 +40,35 @@ export class BaseAgent implements AiAgent {
      */
     async execute(args: any): Promise<any> {
         const input = typeof args === 'string' ? args : (args.input || JSON.stringify(args));
-        return this.chat(input);
+        const result = await this.chat(input);
+        return typeof result.content === 'string' ? result.content : JSON.stringify(result.content);
     }
 
     /**
      * エージェントと対話します
      */
-    async chat(message: string): Promise<string> {
-        this.messages.push({ role: 'user', content: message });
+    async chat(message: string): Promise<AiMessage> {
+        const userMsg: AiMessage = {
+            id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
+            role: 'user',
+            content: message,
+            timestamp: Date.now()
+        };
+        this.messages.push(userMsg);
 
         // ドライバーを使用して応答を生成
-        // 注意: ドライバー側でツール実行をサポートする必要があります
-        const response = await this.driver.generateText({
+        const responseMsg = await this.driver.generateText({
             system: this.persona,
             messages: this.messages,
             tools: this.tools,
         });
 
-        this.messages.push({ role: 'assistant', content: response });
-        return response;
+        // エージェントIDをメタデータに付与
+        if (!responseMsg.metadata) responseMsg.metadata = {};
+        responseMsg.metadata.agentId = this.name;
+
+        this.messages.push(responseMsg);
+        return responseMsg;
     }
 
     /**
@@ -71,7 +81,7 @@ export class BaseAgent implements AiAgent {
     /**
      * 現在の履歴を取得します
      */
-    getHistory() {
+    getHistory(): AiMessage[] {
         return [...this.messages];
     }
 }
