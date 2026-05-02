@@ -209,7 +209,6 @@ export class OpenAiDriver implements AiDriver {
 
         return fullStream.pipeThrough(new TransformStream({
             transform(chunk: any, controller) {
-                console.log('[OpenAI Driver] Raw Chunk:', chunk);
                 switch (chunk.type) {
                     case 'text-delta':
                         controller.enqueue({ type: 'text', content: chunk.text || chunk.textDelta || '' });

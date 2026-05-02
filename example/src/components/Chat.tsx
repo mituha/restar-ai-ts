@@ -15,7 +15,8 @@ export default function Chat({ provider, settings }: ChatProps) {
   const [input, setInput] = useState('');
   const [showThought, setShowThought] = useState(true);
   const [enableThinking, setEnableThinking] = useState(false);
-  const { stream, isGenerating, error } = useAi({ provider, settings });
+  const [useStream, setUseStream] = useState(true);
+  const { generate, stream, isGenerating, error } = useAi({ provider, settings });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,34 +47,50 @@ export default function Chat({ provider, settings }: ChatProps) {
     };
     setMessages(prev => [...prev, assistantMsg]);
 
+    const options = {
+      messages: newMessages,
+      prompt: '',
+      enableThinking: enableThinking,
+      thinkingBudget: 2048
+    };
+
     try {
-      await stream(
-        {
-          messages: newMessages,
-          prompt: '',
-          enableThinking: enableThinking,
-          thinkingBudget: 2048
-        },
-        (chunk) => {
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last && last.role === 'assistant') {
-              if (chunk.type === 'text') {
-                return [
-                  ...prev.slice(0, -1),
-                  { ...last, content: (last.content as string) + chunk.content }
-                ];
-              } else if (chunk.type === 'thought') {
-                return [
-                  ...prev.slice(0, -1),
-                  { ...last, thought: (last.thought || '') + chunk.content }
-                ];
+      if (useStream) {
+        await stream(
+          options,
+          (chunk) => {
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === 'assistant') {
+                if (chunk.type === 'text') {
+                  return [
+                    ...prev.slice(0, -1),
+                    { ...last, content: (last.content as string) + chunk.content }
+                  ];
+                } else if (chunk.type === 'thought') {
+                  return [
+                    ...prev.slice(0, -1),
+                    { ...last, thought: (last.thought || '') + chunk.content }
+                  ];
+                }
               }
-            }
-            return prev;
-          });
-        }
-      );
+              return prev;
+            });
+          }
+        );
+      } else {
+        const result = await generate(options);
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last && last.role === 'assistant') {
+            return [
+              ...prev.slice(0, -1),
+              { ...last, content: result.content, thought: result.thought }
+            ];
+          }
+          return prev;
+        });
+      }
     } catch (err) {
       console.error('Chat error:', err);
     }
@@ -146,10 +163,18 @@ export default function Chat({ provider, settings }: ChatProps) {
           <label className="thought-toggle">
             <input 
               type="checkbox" 
+              checked={useStream} 
+              onChange={(e) => setUseStream(e.target.checked)} 
+            />
+            <span>ストリーミング (Stream)</span>
+          </label>
+          <label className="thought-toggle">
+            <input 
+              type="checkbox" 
               checked={enableThinking} 
               onChange={(e) => setEnableThinking(e.target.checked)} 
             />
-            <span>思考機能を有効化 (Thinking Mode)</span>
+            <span>思考有効化 (Thinking Mode)</span>
           </label>
         </div>
         <div className="input-area">
