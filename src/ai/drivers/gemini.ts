@@ -208,13 +208,13 @@ export class GeminiDriver implements AiDriver {
             transform(chunk: any, controller) {
                 switch (chunk.type) {
                     case 'text-delta':
-                        controller.enqueue({ type: 'text', content: chunk.textDelta || chunk.text || '' });
+                        controller.enqueue({ type: 'text', content: chunk.text || chunk.textDelta || '' });
                         break;
                     case 'reasoning-delta':
-                        controller.enqueue({ type: 'thought', content: chunk.reasoningDelta || chunk.reasoning || '' });
+                        controller.enqueue({ type: 'thought', content: chunk.text || chunk.reasoningDelta || chunk.reasoning || '' });
                         break;
                     case 'thought-delta':
-                        controller.enqueue({ type: 'thought', content: chunk.thoughtDelta || chunk.thought || '' });
+                        controller.enqueue({ type: 'thought', content: chunk.text || chunk.thoughtDelta || chunk.thought || '' });
                         break;
                     case 'tool-call':
                         controller.enqueue({ type: 'tool-call', content: '', metadata: chunk });

@@ -122,9 +122,18 @@ export default function Chat({ provider, settings }: ChatProps) {
                   <ReactMarkdown>{msg.thought}</ReactMarkdown>
                 </div>
               )}
-              <div className="text-area">
-                <ReactMarkdown>{typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}</ReactMarkdown>
-              </div>
+              {msg.role === 'assistant' && isGenerating && i === messages.length - 1 && !msg.thought && !msg.content && (
+                <div className="thinking-indicator">
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                </div>
+              )}
+              {(msg.content || (msg.role === 'assistant' && !isGenerating)) && (
+                <div className="text-area">
+                  <ReactMarkdown>{typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}</ReactMarkdown>
+                </div>
+              )}
             </div>
           </div>
         ))}
