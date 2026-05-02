@@ -1,7 +1,15 @@
 {
   "name": "restar-ai",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
+  "description": "novelaid-editor用生成AI利用ライブラリ",
+  "author": "Mizuki Mituha",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mituha/restar-ai-ts.git"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/mituha/restar-ai-ts",
   "type": "module",
   "scripts": {
     "dev": "vite",
