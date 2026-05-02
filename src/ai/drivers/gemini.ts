@@ -140,7 +140,9 @@ export class GeminiDriver implements AiDriver {
         let thought: string | undefined = undefined;
         if (lastMsg && lastMsg.content && Array.isArray(lastMsg.content)) {
             const thoughtPart = lastMsg.content.find((p: any) => p.type === 'thought' || p.type === 'reasoning');
-            if (thoughtPart) thought = thoughtPart.text || thoughtPart.thought;
+            if (thoughtPart) {
+                thought = (thoughtPart as any).text || (thoughtPart as any).thought || (thoughtPart as any).reasoning || '';
+            }
         }
 
         return {

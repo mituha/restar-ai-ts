@@ -5,5 +5,7 @@ export * from './ai/drivers/openai';
 export * from './ai/agent';
 export * from './ai/tool';
 export * from './ai/pipeline';
+export * from './ai/utils';
 export * from './react/useAi';
 export * from './react/AiSettings';
+export * from './react/AiChatInput';
