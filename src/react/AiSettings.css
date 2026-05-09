@@ -1,11 +1,17 @@
 .restar-ai-settings {
+    --bg-internal: var(--bg-primary, var(--bg-color, #0f172a));
+    --text-internal: var(--text-primary, var(--text-color, #f1f5f9));
+    --text-sec-internal: var(--text-secondary, #94a3b8);
+    --bg-sec-internal: var(--bg-secondary, rgba(30, 41, 59, 0.5));
+    --border-internal: rgba(255, 255, 255, 0.05);
+
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #f1f5f9;
-    background: #0f172a;
+    color: var(--text-internal);
+    background: var(--bg-internal);
     padding: 2rem;
     border-radius: 1rem;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-internal);
     max-width: 600px;
     width: 100%;
     box-sizing: border-box;
@@ -42,7 +48,7 @@
     font-size: 0.8125rem;
     font-weight: 700;
     margin-bottom: 0;
-    color: #94a3b8;
+    color: var(--text-sec-internal);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     white-space: nowrap;
@@ -64,9 +70,9 @@
 .restar-ai-settings select,
 .restar-ai-settings input {
     flex: 1;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid #334155;
-    color: white;
+    background: var(--bg-sec-internal);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-internal);
     padding: 0.625rem 0.875rem;
     border-radius: 0.5rem;
     font-size: 0.9rem;
@@ -92,8 +98,9 @@
     max-height: 150px;
     overflow-y: auto;
     padding: 0.75rem;
-    background: rgba(15, 23, 42, 0.5);
-    border: 1px solid #334155;
+    background: var(--bg-internal);
+    opacity: 0.5;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
 }
 

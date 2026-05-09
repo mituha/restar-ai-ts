@@ -36,7 +36,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   border-radius: 0.4rem;
@@ -57,7 +57,7 @@
 .chat-header button {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 0.5rem;
@@ -84,7 +84,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   gap: 1rem;
 }
 
@@ -147,7 +147,7 @@
   border-left: 2px solid var(--accent);
   border-radius: 0.4rem;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .thought-header {
@@ -179,7 +179,7 @@
 .thinking-indicator .dot {
   width: 6px;
   height: 6px;
-  background: var(--text-muted);
+  background: var(--text-secondary);
   border-radius: 50%;
   animation: thinking-bounce 1.4s infinite ease-in-out both;
 }
@@ -224,7 +224,7 @@
 
 .input-extra-info .hint {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .display-label {
