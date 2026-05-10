@@ -126,10 +126,13 @@ export class OpenAiDriver implements AiDriver {
             stopWhen: tools ? stepCountIs(5) : undefined,
         };
 
+        if (options.system) {
+            args.system = options.system;
+        }
+
         if (options.messages) {
             args.messages = this.mapMessages(options.messages);
         } else {
-            args.system = options.system;
             args.prompt = options.prompt;
         }
 
@@ -200,10 +203,13 @@ export class OpenAiDriver implements AiDriver {
             stopWhen: tools ? stepCountIs(5) : undefined,
         };
 
+        if (options.system) {
+            args.system = options.system;
+        }
+
         if (options.messages) {
             args.messages = this.mapMessages(options.messages);
         } else {
-            args.system = options.system;
             args.prompt = options.prompt;
         }
 
