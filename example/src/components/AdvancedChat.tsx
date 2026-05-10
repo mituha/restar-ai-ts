@@ -87,6 +87,11 @@ export default function AdvancedChat({ provider, settings }: ChatProps) {
                     ...prev.slice(0, -1),
                     { ...last, thought: (last.thought || '') + chunk.content }
                   ];
+                } else if (chunk.type === 'error') {
+                  return [
+                    ...prev.slice(0, -1),
+                    { ...last, error: chunk.content }
+                  ];
                 }
               }
               return prev;
@@ -100,7 +105,7 @@ export default function AdvancedChat({ provider, settings }: ChatProps) {
           if (last && last.role === 'assistant') {
             return [
               ...prev.slice(0, -1),
-              { ...last, content: result.content, thought: result.thought }
+              { ...last, content: result.content, thought: result.thought, error: result.error }
             ];
           }
           return prev;
@@ -169,7 +174,12 @@ export default function AdvancedChat({ provider, settings }: ChatProps) {
                       <div className="dot"></div>
                     </div>
                   )}
-                  {(msg.content || !isGenerating) && (
+                  {msg.error && (
+                    <div className="message-error">
+                      <strong>Error:</strong> {msg.error}
+                    </div>
+                  )}
+                  {(msg.content || (!isGenerating && !msg.error)) && (
                     <div className="text-area">
                       <ReactMarkdown>
                         {typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}

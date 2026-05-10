@@ -103,72 +103,86 @@ export class GeminiDriver implements AiDriver {
      * @returns 生成されたメッセージ
      */
     async generateText(options: GenerationOptions): Promise<AiMessage> {
-        const tools = options.tools?.reduce((acc, tool) => {
-            acc[tool.name] = {
-                description: tool.description,
-                parameters: jsonSchema(tool.parameters),
-                execute: tool.execute,
+        try {
+            const tools = options.tools?.reduce((acc, tool) => {
+                acc[tool.name] = {
+                    description: tool.description,
+                    parameters: jsonSchema(tool.parameters),
+                    execute: tool.execute,
+                };
+                return acc;
+            }, {} as any);
+
+            const args: any = {
+                model: this.getModelInstance(),
+                temperature: options.temperature,
+                maxOutputTokens: options.maxTokens,
+                tools: tools,
+                stopWhen: tools ? stepCountIs(5) : undefined,
             };
-            return acc;
-        }, {} as any);
 
-        const args: any = {
-            model: this.getModelInstance(),
-            temperature: options.temperature,
-            maxOutputTokens: options.maxTokens,
-            tools: tools,
-            stopWhen: tools ? stepCountIs(5) : undefined,
-        };
+            if (options.system) {
+                args.system = options.system;
+            }
 
-        if (options.system) {
-            args.system = options.system;
-        }
+            if (options.messages) {
+                args.messages = this.mapMessages(options.messages);
+            } else {
+                args.prompt = options.prompt;
+            }
 
-        if (options.messages) {
-            args.messages = this.mapMessages(options.messages);
-        } else {
-            args.prompt = options.prompt;
-        }
+            if (options.enableThinking) {
+                args.thinking = {
+                    budgetTokens: options.thinkingBudget || 1024
+                };
+            }
 
-        if (options.enableThinking) {
-            args.thinking = {
-                budgetTokens: options.thinkingBudget || 1024
+            const result: any = await generateText(args);
+            const { text, toolCalls, usage, finishReason, responseMessages } = result;
+
+            const lastMsg = responseMessages ? responseMessages[responseMessages.length - 1] : undefined;
+            let thought: string | undefined = undefined;
+            if (lastMsg && lastMsg.content && Array.isArray(lastMsg.content)) {
+                const thoughtPart = lastMsg.content.find((p: any) => p.type === 'thought' || p.type === 'reasoning');
+                if (thoughtPart) {
+                    thought = (thoughtPart as any).text || (thoughtPart as any).thought || (thoughtPart as any).reasoning || '';
+                }
+            }
+
+            return {
+                id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
+                role: 'assistant',
+                content: text,
+                thought,
+                timestamp: Date.now(),
+                toolCalls: toolCalls?.map((tc: any) => ({
+                    id: tc.toolCallId || tc.id,
+                    name: tc.toolName || tc.name,
+                    args: tc.args
+                })),
+                metadata: {
+                    model: this.settings.model,
+                    usage: usage ? {
+                        promptTokens: usage.promptTokens || usage.prompt_tokens || 0,
+                        completionTokens: usage.completionTokens || usage.completion_tokens || 0,
+                        totalTokens: usage.totalTokens || usage.total_tokens || 0
+                    } : undefined,
+                    finishReason
+                }
+            };
+        } catch (error: any) {
+            console.error("Gemini generateText failed:", error);
+            return {
+                id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
+                role: 'assistant',
+                content: '',
+                error: error.message || String(error),
+                timestamp: Date.now(),
+                metadata: {
+                    model: this.settings.model,
+                }
             };
         }
-
-        const result: any = await generateText(args);
-        const { text, toolCalls, usage, finishReason, responseMessages } = result;
-
-        const lastMsg = responseMessages ? responseMessages[responseMessages.length - 1] : undefined;
-        let thought: string | undefined = undefined;
-        if (lastMsg && lastMsg.content && Array.isArray(lastMsg.content)) {
-            const thoughtPart = lastMsg.content.find((p: any) => p.type === 'thought' || p.type === 'reasoning');
-            if (thoughtPart) {
-                thought = (thoughtPart as any).text || (thoughtPart as any).thought || (thoughtPart as any).reasoning || '';
-            }
-        }
-
-        return {
-            id: (crypto as any).randomUUID?.() || Math.random().toString(36).substring(2),
-            role: 'assistant',
-            content: text,
-            thought,
-            timestamp: Date.now(),
-            toolCalls: toolCalls?.map((tc: any) => ({
-                id: tc.toolCallId || tc.id,
-                name: tc.toolName || tc.name,
-                args: tc.args
-            })),
-            metadata: {
-                model: this.settings.model,
-                usage: usage ? {
-                    promptTokens: usage.promptTokens || usage.prompt_tokens || 0,
-                    completionTokens: usage.completionTokens || usage.completion_tokens || 0,
-                    totalTokens: usage.totalTokens || usage.total_tokens || 0
-                } : undefined,
-                finishReason
-            }
-        };
     }
 
     /**
@@ -177,62 +191,76 @@ export class GeminiDriver implements AiDriver {
      * @returns チャンクのストリーム
      */
     async streamText(options: GenerationOptions): Promise<ReadableStream<AiStreamChunk>> {
-        const tools = options.tools?.reduce((acc, tool) => {
-            acc[tool.name] = {
-                description: tool.description,
-                parameters: jsonSchema(tool.parameters),
-                execute: tool.execute,
+        try {
+            const tools = options.tools?.reduce((acc, tool) => {
+                acc[tool.name] = {
+                    description: tool.description,
+                    parameters: jsonSchema(tool.parameters),
+                    execute: tool.execute,
+                };
+                return acc;
+            }, {} as any);
+
+            const args: any = {
+                model: this.getModelInstance(),
+                temperature: options.temperature,
+                maxOutputTokens: options.maxTokens,
+                tools: tools,
+                stopWhen: tools ? stepCountIs(5) : undefined,
             };
-            return acc;
-        }, {} as any);
 
-        const args: any = {
-            model: this.getModelInstance(),
-            temperature: options.temperature,
-            maxOutputTokens: options.maxTokens,
-            tools: tools,
-            stopWhen: tools ? stepCountIs(5) : undefined,
-        };
-
-        if (options.system) {
-            args.system = options.system;
-        }
-
-        if (options.messages) {
-            args.messages = this.mapMessages(options.messages);
-        } else {
-            args.prompt = options.prompt;
-        }
-
-        if (options.enableThinking) {
-            args.experimental_thinking = {
-                budgetTokens: options.thinkingBudget || 1024
-            };
-        }
-
-        const { fullStream } = await streamText(args);
-
-        return fullStream.pipeThrough(new TransformStream({
-            transform(chunk: any, controller) {
-                switch (chunk.type) {
-                    case 'text-delta':
-                        controller.enqueue({ type: 'text', content: chunk.text || chunk.textDelta || '' });
-                        break;
-                    case 'reasoning-delta':
-                        controller.enqueue({ type: 'thought', content: chunk.text || chunk.reasoningDelta || chunk.reasoning || '' });
-                        break;
-                    case 'thought-delta':
-                        controller.enqueue({ type: 'thought', content: chunk.text || chunk.thoughtDelta || chunk.thought || '' });
-                        break;
-                    case 'tool-call':
-                        controller.enqueue({ type: 'tool-call', content: '', metadata: chunk });
-                        break;
-                    case 'error':
-                        controller.enqueue({ type: 'error', content: String(chunk.error) });
-                        break;
-                }
+            if (options.system) {
+                args.system = options.system;
             }
-        })) as ReadableStream<AiStreamChunk>;
+
+            if (options.messages) {
+                args.messages = this.mapMessages(options.messages);
+            } else {
+                args.prompt = options.prompt;
+            }
+
+            if (options.enableThinking) {
+                args.experimental_thinking = {
+                    budgetTokens: options.thinkingBudget || 1024
+                };
+            }
+
+            const { fullStream } = await streamText(args);
+
+            return fullStream.pipeThrough(new TransformStream({
+                transform(chunk: any, controller) {
+                    switch (chunk.type) {
+                        case 'text-delta':
+                            controller.enqueue({ type: 'text', content: chunk.text || chunk.textDelta || '' });
+                            break;
+                        case 'reasoning-delta':
+                            controller.enqueue({ type: 'thought', content: chunk.text || chunk.reasoningDelta || chunk.reasoning || '' });
+                            break;
+                        case 'thought-delta':
+                            controller.enqueue({ type: 'thought', content: chunk.text || chunk.thoughtDelta || chunk.thought || '' });
+                            break;
+                        case 'tool-call':
+                            controller.enqueue({ type: 'tool-call', content: '', metadata: chunk });
+                            break;
+                        case 'error':
+                            controller.enqueue({ type: 'error', content: String(chunk.error) });
+                            break;
+                    }
+                }
+            })) as ReadableStream<AiStreamChunk>;
+        } catch (error: any) {
+            console.error("Gemini streamText failed:", error);
+            // 初期化エラー時にエラーチャンクを即座に流す
+            return new ReadableStream({
+                start(controller) {
+                    controller.enqueue({ 
+                        type: 'error', 
+                        content: error.message || String(error) 
+                    });
+                    controller.close();
+                }
+            });
+        }
     }
 
     /**

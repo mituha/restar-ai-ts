@@ -65,6 +65,17 @@ export default function Chat({ provider, settings }: ChatProps) {
               }
               return prev;
             });
+          } else if (chunk.type === 'error') {
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === 'assistant') {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, error: chunk.content }
+                ];
+              }
+              return prev;
+            });
           }
         }
       );
@@ -97,9 +108,16 @@ export default function Chat({ provider, settings }: ChatProps) {
               {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
             </div>
             <div className="message-content">
-              <ReactMarkdown>
-                {typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}
-              </ReactMarkdown>
+              {msg.error && (
+                <div className="message-error">
+                  <strong>Error:</strong> {msg.error}
+                </div>
+              )}
+              {(msg.content || !msg.error) && (
+                <ReactMarkdown>
+                  {typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}
+                </ReactMarkdown>
+              )}
             </div>
           </div>
         ))}

@@ -29,6 +29,9 @@ export function useAi({ provider, settings }: UseAiOptions) {
         setError(null);
         try {
             const result = await driver.generateText(options);
+            if (result.error) {
+                setError(result.error);
+            }
             return result;
         } catch (err: any) {
             const msg = err.message || String(err);

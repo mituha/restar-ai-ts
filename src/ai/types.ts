@@ -81,6 +81,8 @@ export interface AiMessage {
     toolCallId?: string;
     /** 拡張メタデータ */
     metadata?: AiMessageMetadata;
+    /** エラー情報（エラー発生時のみ） */
+    error?: string;
 }
 
 /**
