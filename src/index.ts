@@ -9,3 +9,4 @@ export * from './ai/utils';
 export * from './react/useAi';
 export * from './react/AiSettings';
 export * from './react/AiChatInput';
+export * from './ai/persona';

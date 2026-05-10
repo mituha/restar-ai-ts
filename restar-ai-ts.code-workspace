@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../../novel-tools/novelaid-editor"
+		},
+		{
+			"path": "../../novel-tools/novelaid-editor-next"
 		}
 	],
 	"settings": {}

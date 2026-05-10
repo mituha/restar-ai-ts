@@ -1,4 +1,5 @@
 import type { AiAgent, AiDriver, AiTool, AiMessage } from './types';
+import type { AiPersona } from './persona';
 
 /**
  * エージェントの基本実装クラス
@@ -14,16 +15,23 @@ export class BaseAgent implements AiAgent {
     protected messages: AiMessage[] = [];
 
     constructor(config: {
-        name: string;
-        description: string;
-        persona: string;
+        name?: string;
+        description?: string;
+        persona: string | AiPersona;
         driver: AiDriver;
         tools?: AiTool[];
         parameters?: Record<string, any>;
     }) {
-        this.name = config.name;
-        this.description = config.description;
-        this.persona = config.persona;
+        if (typeof config.persona === 'string') {
+            this.name = config.name || 'Agent';
+            this.description = config.description || '';
+            this.persona = config.persona;
+        } else {
+            const p = config.persona;
+            this.name = config.name || p.name;
+            this.description = config.description || p.description;
+            this.persona = p.systemPrompt;
+        }
         this.driver = config.driver;
         this.tools = config.tools || [];
         this.parameters = config.parameters || {
